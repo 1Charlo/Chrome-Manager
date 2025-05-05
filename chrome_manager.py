@@ -150,6 +150,7 @@ class ChromeManager:
         self.screens = []  # 初始化屏幕列表
         
         # 从设置加载所有路径
+        self.chrome_exe_path = self.settings.get('chrome_exe_path', '')
         self.shortcut_path = self.settings.get('shortcut_path', '')
         self.cache_dir = self.settings.get('cache_dir', '')
         self.icon_dir = self.settings.get('icon_dir', '')
@@ -1887,6 +1888,7 @@ class ChromeManager:
         # 保存设置
         try:
             # 确保信息是最新的
+            self.settings['chrome_exe_path'] = self.chrome_exe_path
             self.settings['shortcut_path'] = self.shortcut_path
             self.settings['cache_dir'] = self.cache_dir
             self.settings['icon_dir'] = self.icon_dir
@@ -2507,9 +2509,7 @@ class ChromeManager:
                 
                 messagebox.showinfo("成功", f"已成功修改 {modified_count} 个快捷方式的图标！")
             else:  # 恢复原始设置
-                chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-                if not os.path.exists(chrome_path):
-                    chrome_path = r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+                chrome_path = self.chrome_exe_path
                 
                 # 获取Chrome数据目录
                 chrome_data_dir = settings.get('cache_dir', 'D:\\chrom duo\\Data')
@@ -2670,33 +2670,30 @@ class ChromeManager:
 
     def find_chrome_path(self):
         """查找Chrome可执行文件路径"""
-        common_paths = [
-            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-            r"C:\Users\%USERNAME%\AppData\Local\Google\Chrome\Application\chrome.exe"
-        ]
+        path = self.chrome_exe_path
+        return path
         
-        # 替换用户名
-        username = os.environ.get('USERNAME', '')
-        common_paths = [p.replace('%USERNAME%', username) for p in common_paths]
+        # # 替换用户名
+        # username = os.environ.get('USERNAME', '')
+        # common_paths = [p.replace('%USERNAME%', username) for p in common_paths]
         
-        # 检查常见路径
-        for path in common_paths:
-            if os.path.exists(path):
-                return path
+        # # 检查常见路径
+        # for path in common_paths:
+        #     if os.path.exists(path):
+        #         return path
         
-        # 如果找不到，尝试从注册表获取
-        try:
-            import winreg
-            key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe")
-            chrome_path, _ = winreg.QueryValueEx(key, None)
-            if os.path.exists(chrome_path):
-                return chrome_path
-        except:
-            pass
+        # # 如果找不到，尝试从注册表获取
+        # try:
+        #     import winreg
+        #     key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe")
+        #     chrome_path, _ = winreg.QueryValueEx(key, None)
+        #     if os.path.exists(chrome_path):
+        #         return chrome_path
+        # except:
+        #     pass
         
-        # 如果以上方法都失败，返回None
-        return None
+        # # 如果以上方法都失败，返回None
+        # return None
 
     def run(self):
         """运行程序"""
@@ -3440,9 +3437,7 @@ class ChromeManager:
             os.makedirs(shortcut_dir, exist_ok=True)
             
             # 查找chrome可执行文件
-            chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-            if not os.path.exists(chrome_path):
-                chrome_path = r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+            chrome_path = self.chrome_exe_path
                 
             if not os.path.exists(chrome_path):
                 messagebox.showerror("错误", "未找到Chrome安装路径！")
@@ -3532,7 +3527,7 @@ class ChromeManager:
         # 创建设置对话框
         settings_dialog = tk.Toplevel(self.root)
         settings_dialog.title("设置")
-        settings_dialog.geometry("500x370")  # 增加窗口高度
+        settings_dialog.geometry("500x400")  # 增加窗口高度
         settings_dialog.resizable(False, False)
         settings_dialog.transient(self.root)
         settings_dialog.grab_set()
@@ -3559,6 +3554,22 @@ class ChromeManager:
         
         # 加载当前设置
         settings = self.load_settings()
+
+        # ===========================新增功能 start=================================
+        # 快捷方式目录
+        chrome_exe_frame = ttk.Frame(settings_frame)
+        chrome_exe_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(chrome_exe_frame, text="谷歌Chrome.exe目录:").pack(side=tk.LEFT)
+        chrome_exe_path_var = tk.StringVar(value=self.chrome_exe_path or settings.get('chrome_exe_path', ''))
+        chrome_exe_path_entry = ttk.Entry(chrome_exe_frame, textvariable=chrome_exe_path_var)
+        chrome_exe_path_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+        self.setup_right_click_menu(chrome_exe_path_entry)
+        ttk.Button(
+            chrome_exe_frame,
+            text="浏览",
+            command=lambda: chrome_exe_path_var.set(filedialog.askopenfilename(initialdir=chrome_exe_path_var.get() or os.getcwd(),filetypes=[("可执行文件", "*.exe")]))
+        ).pack(side=tk.LEFT)
+        # ===========================新增功能 end=================================
         
         # 快捷方式目录
         shortcut_frame = ttk.Frame(settings_frame)
@@ -3661,6 +3672,7 @@ class ChromeManager:
             style='Accent.TButton',
             command=lambda: self.save_settings_dialog(
                 settings_dialog,
+                chrome_exe_path_var.get(),
                 shortcut_path_var.get(),
                 cache_dir_var.get(),
                 icon_dir_var.get(),
@@ -3684,12 +3696,13 @@ class ChromeManager:
         # 在对话框创建完成后应用右键菜单
         settings_dialog.after(100, lambda: add_right_click_to_all_entries(settings_dialog))
 
-    def save_settings_dialog(self, dialog, shortcut_path, cache_dir, icon_dir, screen):
+    def save_settings_dialog(self, dialog, chrome_exe_path, shortcut_path, cache_dir, icon_dir, screen):
         """保存设置对话框中的设置"""
         try:
             print("保存前设置:", self.load_settings())  # 调试输出
             
             # 更新当前实例变量，确保在本次会话中立即生效
+            self.chrome_exe_path = chrome_exe_path
             self.shortcut_path = shortcut_path
             self.cache_dir = cache_dir
             self.icon_dir = icon_dir
@@ -3698,6 +3711,7 @@ class ChromeManager:
             
             # 准备新设置
             new_settings = {
+                'chrome_exe_path': chrome_exe_path,
                 'shortcut_path': shortcut_path,
                 'cache_dir': cache_dir,
                 'icon_dir': icon_dir,
