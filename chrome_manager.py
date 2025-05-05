@@ -124,7 +124,7 @@ class ChromeManager:
         
         # 设置固定的窗口大小
         self.window_width = 700
-        self.window_height = 360
+        self.window_height = 580
         self.root.geometry(f"{self.window_width}x{self.window_height}")
         self.root.resizable(False, False)
         
@@ -365,7 +365,7 @@ class ChromeManager:
         self.window_list = ttk.Treeview(list_frame, 
             columns=("select", "number", "title", "master", "hwnd"),
             show="headings", 
-            height=4,  
+            height=18, 
             style='Accent.Treeview'
         )
         self.window_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
