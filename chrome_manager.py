@@ -5069,6 +5069,16 @@ class ChromeManager:
         launch_arguments += f' --new-window {chrome_home}'
         return launch_arguments
 
+    # 返回指定chrome环境的备注信息
+    def get_environment_info(self, chrome_num):
+        environment_info = {}
+        if chrome_num in self.fingerprint_proxy_notes:
+            environment_info["window_num"] = chrome_num
+            environment_info["window_name"] = self.fingerprint_proxy_notes[chrome_num]["chrome_name"]
+            environment_info["ip"] = self.fingerprint_proxy_notes[chrome_num]["socks_remote"]
+            environment_info["note"] = self.fingerprint_proxy_notes[chrome_num]["note"]
+            environment_info["language"] = self.fingerprint_proxy_notes[chrome_num]["language"]
+        return environment_info
 
     # 加载指纹、代理、备注等信息
     def load_fingerprint_proxy_notes(self):
