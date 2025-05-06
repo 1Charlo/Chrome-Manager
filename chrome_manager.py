@@ -3504,7 +3504,9 @@ class ChromeManager:
                 shortcut_path = os.path.join(shortcut_dir, f"{i}.lnk")
                 shortcut = shell.CreateShortCut(shortcut_path)
                 shortcut.TargetPath = chrome_path
-                shortcut.Arguments = f'--user-data-dir="{data_dir}"'  # 使用统一的正斜杠格式
+                user_data_dir = f'--user-data-dir="{data_dir}"'  # 使用统一的正斜杠格式
+                launch_arguments = self.get_chrome_launch_arguments(str(i))  # 获取运行参数：指纹、socks5代理等
+                shortcut.Arguments = user_data_dir + launch_arguments
                 shortcut.WorkingDirectory = os.path.dirname(chrome_path)
                 shortcut.WindowStyle = 1  # 正常窗口
                 shortcut.IconLocation = f"{chrome_path},0"
@@ -5043,7 +5045,31 @@ class ChromeManager:
         except Exception as e:
             print(f"保存提示设置失败: {str(e)}")
             messagebox.showerror("设置保存失败", f"无法保存提示设置: {str(e)}")
-        
+
+
+    # 返回chrome快捷方式启动时需要的运行参数
+    def get_chrome_launch_arguments(self, chrome_num):
+        launch_arguments = ""
+        chrome_home = f'http://127.0.0.1:31001/window/{chrome_num}'
+        if chrome_num in self.fingerprint_proxy_notes:
+            args = self.fingerprint_proxy_notes[chrome_num]
+            if "fingerprint" in args:
+                launch_arguments += " " + args["fingerprint"]     # 添加指纹信息
+            if "socks_local" in args:
+                launch_arguments += f' --proxy-server=socks5://{args["socks_local"]}'    # 添加socks5代理
+            if "language" in args:
+                launch_arguments += f' --lang={args["language"]} --accept-lang={args["language"]}'
+            if "chrome_name" in args:
+                launch_arguments += f' --window-name={args["chrome_name"]}'    # 添加chrome窗口添加名称
+            else:
+                launch_arguments += f' --window-name={chrome_num}'
+        # 添加chrome主页
+        launch_arguments += f' --homepage=\"{chrome_home}\"'
+        # 设置chrome启动打开新窗口
+        launch_arguments += f' --new-window {chrome_home}'
+        return launch_arguments
+
+
     # 加载指纹、代理、备注等信息
     def load_fingerprint_proxy_notes(self):
         # 加载设置
