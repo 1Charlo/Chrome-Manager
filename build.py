@@ -385,6 +385,11 @@ def build():
         # 复制指纹、代理、窗口备注的配置文件到dist目录
         if not os.path.exists(os.path.join('dist', 'fingerprint_proxy_notes.json')) and os.path.exists('fingerprint_proxy_notes.json'):
             shutil.copy('fingerprint_proxy_notes.json', os.path.join('dist', 'fingerprint_proxy_notes.json'))
+        # 将窗口主页的页面模板复制到dist目录
+        if os.path.exists('templates'):
+            if os.path.exists(os.path.join('dist', 'templates')):
+                shutil.rmtree(os.path.join('dist', 'templates'))
+            shutil.copytree('templates', os.path.join('dist', 'templates'))
         show_success_message()
         return True
     except subprocess.CalledProcessError as e:
