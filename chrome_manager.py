@@ -14,6 +14,7 @@ import math
 import ctypes
 from ctypes import wintypes
 import threading
+from threading import Timer
 import time
 import sys
 import keyboard
@@ -77,6 +78,15 @@ class ChromeManager:
         self.fingerprint_proxy_notes = self.load_fingerprint_proxy_notes()
         
         self.enable_cdp = True  # 始终开启CDP
+
+        # 定时重载配置文件settings、fingerprint_proxy_notes
+        self.reload_interval=60
+        self._timer = None
+        self._stop_event = threading.Event() # 停止信号, False
+        if not self._stop_event.is_set():
+            self._timer = Timer(self.reload_interval, self.reload_config)
+            self._timer.daemon = True  # 设为守护线程
+            self._timer.start()
         
         # 从设置中读取是否显示Chrome提示的设置
         if 'show_chrome_tip' in self.settings:
@@ -1613,6 +1623,13 @@ class ChromeManager:
             self.save_settings()
             # 保存窗口位置
             self.save_window_position()
+
+            # 关闭配置文件定时load的线程
+            self._stop_event.set()  # 设置停止事件标志
+            if self._timer:
+                self._timer.cancel()
+                self._timer = None # 清理引用
+                print("==========定时重载配置文件线程 已关闭")
             
             # 移除系统托盘图标
             if not self.is_win11 and hasattr(self, 'notify_id'):
@@ -1922,6 +1939,7 @@ class ChromeManager:
             'windows_per_row': self.windows_per_row.get()
         }
 
+    # =================无用函数
     def load_arrange_params(self):
         # 加载排列参数
         settings = self.load_settings()
@@ -2102,6 +2120,7 @@ class ChromeManager:
         except Exception as e:
             messagebox.showerror("错误", f"打开窗口失败: {str(e)}")
 
+    # =================无用函数
     def get_shortcut_number(self, shortcut_path):
         # 从快捷方式文件名中获取窗口编号
         try:
@@ -2670,6 +2689,7 @@ class ChromeManager:
         except Exception as e:
             messagebox.showerror("错误", f"批量打开网页失败: {str(e)}")
 
+    # =======================需修改，直接返回path，去掉查找路径的代码
     def find_chrome_path(self):
         """查找Chrome可执行文件路径"""
         path = self.chrome_exe_path
@@ -3477,6 +3497,7 @@ class ChromeManager:
         except Exception as e:
             messagebox.showerror("错误", f"创建环境失败: {str(e)}")
 
+    # =================无用函数
     def setup_hotkey_message_handler(self):
         """设置热键消息处理"""
         try:
@@ -4497,6 +4518,7 @@ class ChromeManager:
         except Exception as e:
             print(f"同步滚动出错: {str(e)}")
 
+    # =================无用函数
     def sync_all_windows_scroll(self, normalized_delta):
         """同步所有窗口的滚动 - 设置适中的滚动幅度"""
         # 遍历所有窗口，包括主窗口
@@ -5015,6 +5037,28 @@ class ChromeManager:
         except Exception as e:
             print(f"加载设置失败: {str(e)}")
         return fingerprint_proxy_notes
+
+    # 定时重载配置文件
+    def reload_config(self):
+        if self._stop_event.is_set():
+            print("==========停止 定时重载配置文件")
+            return 
+        
+        try:
+            print("==========定时加载配置文件")
+            self.fingerprint_proxy_notes = self.load_fingerprint_proxy_notes()
+            time.sleep(60)
+        except Exception as e:
+            print(f"重载配置文件失败: {str(e)}")
+        
+        if not self._stop_event.is_set():
+            # 创建并启动新的Timer
+            self._timer = threading.Timer(self.reload_interval, self.reload_config)
+            self._timer.daemon = True
+            self._timer.start()
+        else:
+            print("==========退出 定时重载配置文件")
+
 
 if __name__ == "__main__":
     try:
