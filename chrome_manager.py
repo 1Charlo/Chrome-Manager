@@ -38,6 +38,7 @@ import wmi
 import pythoncom  # 添加pythoncom导入
 import concurrent.futures
 import random
+from bottle import Bottle, run, request, template, TEMPLATE_PATH, response
 
 # 添加滚轮钩子所需的结构体定义
 class POINT(ctypes.Structure):
@@ -62,6 +63,23 @@ def is_admin():
 def run_as_admin():
     # 以管理员权限重新运行程序
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+
+# ========================= Web 服务=========================
+def get_template_dir():
+    # 获取模板目录路径（兼容开发模式和 PyInstaller EXE 模式）
+    if getattr(sys, 'frozen', False):  # 判断是否在 PyInstaller EXE 模式
+        # EXE 模式下，模板目录应该在 EXE 同级目录的 templates/
+        return os.path.join(os.path.dirname(sys.executable), 'templates')
+    else:
+        # 开发模式下，使用 __file__ 的相对路径
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
+
+# 创建 Bottle 应用实例
+web_app = Bottle()
+# 设置模板文件所在的目录
+template_dir = get_template_dir()
+TEMPLATE_PATH.insert(0, template_dir) # 将我们的 templates 目录添加到查找路径
+# ========================= Web 服务=========================
 
 class ChromeManager:
     def __init__(self):
@@ -5063,6 +5081,36 @@ class ChromeManager:
 if __name__ == "__main__":
     try:
         app = ChromeManager()
+
+        # ========================= 启动web服务 =========================
+        @web_app.route('/window/<chrome_num>')
+        def get_info_page(chrome_num):
+            """处理请求并返回渲染后的 HTML 页面"""
+            # 获取页面参数
+            try:
+                window_info = app.get_environment_info(chrome_num)
+                response.content_type = 'text/html; charset=utf-8'
+                # 使用 template 函数渲染模板
+                return template('window_info.html', data=window_info)
+            except Exception as e:
+                return f"<h1>Server Error</h1><p> Error: {e}</p>"
+        
+        @web_app.route('/hello')
+        def hello():
+            return "Hello！"
+        
+        def run_web_server():
+            try:
+                print("==========Web Server on http://127.0.0.1:31001")
+                run(web_app, host='127.0.0.1', port=31001, reloader=False, quiet=False)
+                print("==========Bottle web server finished==========")
+            except Exception as e:
+                print(f"Error running Bottle server: {e}")
+        
+        web_thread = threading.Thread(target=run_web_server, name="WebServerThread", daemon=True)
+        web_thread.start()
+        # ========================= 启动web服务 =========================
+
         app.run()
     except Exception as e:
         # 确保错误被显示出来
