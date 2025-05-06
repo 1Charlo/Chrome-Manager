@@ -73,6 +73,8 @@ class ChromeManager:
         
         # 加载设置
         self.settings = self.load_settings()
+        # 加载指纹、socks代理、备注等信息
+        self.fingerprint_proxy_notes = self.load_fingerprint_proxy_notes()
         
         self.enable_cdp = True  # 始终开启CDP
         
@@ -5001,18 +5003,18 @@ class ChromeManager:
         except Exception as e:
             print(f"保存提示设置失败: {str(e)}")
             messagebox.showerror("设置保存失败", f"无法保存提示设置: {str(e)}")
-
-    def load_settings(self) -> dict:
+        
+    # 加载指纹、代理、备注等信息
+    def load_fingerprint_proxy_notes(self):
         # 加载设置
-        settings = {}
+        fingerprint_proxy_notes = {}
         try:
-            if os.path.exists('settings.json'):
-                with open('settings.json', 'r', encoding='utf-8') as f:
-                    settings = json.load(f)
+            if os.path.exists('fingerprint_proxy_notes.json'):
+                with open('fingerprint_proxy_notes.json', 'r', encoding='utf-8') as f:
+                    fingerprint_proxy_notes = json.load(f)
         except Exception as e:
             print(f"加载设置失败: {str(e)}")
-            
-        return settings
+        return fingerprint_proxy_notes
 
 if __name__ == "__main__":
     try:
