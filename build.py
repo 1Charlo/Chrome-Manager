@@ -382,7 +382,9 @@ def build():
         # 复制额外文件到dist目录
         if not os.path.exists(os.path.join('dist', 'settings.json')) and os.path.exists('settings.json'):
             shutil.copy('settings.json', os.path.join('dist', 'settings.json'))
-        
+        # 复制指纹、代理、窗口备注的配置文件到dist目录
+        if not os.path.exists(os.path.join('dist', 'fingerprint_proxy_notes.json')) and os.path.exists('fingerprint_proxy_notes.json'):
+            shutil.copy('fingerprint_proxy_notes.json', os.path.join('dist', 'fingerprint_proxy_notes.json'))
         show_success_message()
         return True
     except subprocess.CalledProcessError as e:
