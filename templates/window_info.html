@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{data.get('window_num')}} | {{data.get('window_name')}} 窗口信息</title>
+    <style>
+        /* CSS 样式与之前完全相同 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+        .ip-banner {
+            background-color: #7C73F6;
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .ip-banner h1 { margin: 0 0 5px 0; font-size: 1.8em; font-weight: 500; }
+        .ip-banner p { margin: 0; font-size: 1em; opacity: 0.9; }
+        .info-box {
+            background-color: white;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .info-box h2 {
+            margin-top: 0; margin-bottom: 25px; font-size: 1.4em; color: #333;
+            border-bottom: 1px solid #eee; padding-bottom: 10px;
+        }
+        .info-item {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; font-size: 0.95em; color: #555; padding: 5px 0;
+            flex-wrap: wrap;
+        }
+        .info-item .key { color: #666; min-width: 80px; padding-right: 15px; }
+        .info-item .value { color: #333; text-align: right; word-break: break-all; flex-grow: 1; }
+        .footer { margin-top: 20px; text-align: center; font-size: 0.8em; color: #aaa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="ip-banner">
+            <h1>IP: {{ data.get('ip') }}</h1>
+        </div>
+        <div class="info-box">
+            <h2>窗口信息</h2>
+            <div class="info-item">
+                <span class="key">ID</span>
+                <span class="value">{{ data.get('window_num') }}</span>
+            </div>
+            <div class="info-item">
+                <span class="key">名称</span>
+                <span class="value">{{ data.get('window_name') }}</span>
+            </div>
+            <div class="info-item remark">
+                <span class="key">备注</span>
+                <span class="value" style="word-break:normal;width: 200px;display:block;white-space:pre-wrap;word-wrap : break-word;overflow: hidden;">{{ data.get('note') }}</span>
+            </div>
+            <div class="info-item">
+                <span class="key">国家/地区</span>
+                <span id="country-region-info">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="key">在线获取ip</span>
+                <span id="online-ip">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="key">语言</span>
+                <span class="value">{{ data.get('language') }}</span>
+            </div>
+        </div>
+    </div>
+    <script>
+        const socks_proxy_ip = '{{ data.get("ip") }}';
+        async function fetchAndDisplayLocation() {
+            const infoElement = document.getElementById('country-region-info');
+            const onlineIpElement = document.getElementById('online-ip');
+            const apiUrl = `https://ip125.com/api/${socks_proxy_ip}`;   //获取ip的归属地
+            const onlineIpUrl = "https://api.ipify.org";    //在线获取ip
+            try {
+                console.log(`Fetching location info from: ${apiUrl}`);
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const locationData = await response.json();
+                if (locationData && locationData.country && locationData.city) {
+                    infoElement.textContent = locationData.country + " / " + locationData.city;
+                } else {
+                    console.error('API response did not contain info_country_region:', locationData);
+                    infoElement.textContent = 'N/A';
+                }
+            } catch (error) {
+                console.error('Error fetching location info:', error);
+                infoElement.textContent = 'Error loading data';
+            }
+
+            try {
+                console.log(`Fetching online ip from: ${onlineIpUrl}`);
+                const response = await fetch(onlineIpUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const onlineIp = await response.text();
+                onlineIpElement.textContent = onlineIp;
+            } catch (error) {
+                console.error('Error fetching location info:', error);
+                infoElement.textContent = 'Error loading data';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', fetchAndDisplayLocation);
+    </script>
+</body>
+</html>
