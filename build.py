@@ -330,6 +330,7 @@ def build():
         'requests': '2.32.3',
         'pillow': '11.1.0',
         'win11toast': '0.32',  # 包含win11toast但允许安装失败
+        'bottle': '0.13.3',
     }
     
     # 获取当前已安装的包
