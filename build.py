@@ -152,6 +152,7 @@ def create_spec_file(sv_ttk_path: str):
         'pythoncom',
         'concurrent.futures',
         'winreg',
+        'bottle',
         'win11toast'  # 总是包含win11toast，即使安装失败也不影响
     ]
     
