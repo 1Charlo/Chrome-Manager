@@ -156,7 +156,7 @@ class ChromeManager:
         self.window_width = 700
         self.window_height = 580
         self.root.geometry(f"{self.window_width}x{self.window_height}")
-        self.root.resizable(False, False)
+        self.root.resizable(False, True)
         
         # 设置关闭事件处理
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
