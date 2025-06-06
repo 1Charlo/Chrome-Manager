@@ -55,6 +55,7 @@
     <div class="container">
         <div class="ip-banner">
             <h1>IP: {{ data.get('ip') }}</h1>
+            <p id="ip-warning" style="display: none; color: red; font-weight: bold; margin: 5px 0 0 0;">!!! socks5代理异常</p>
         </div>
         <div class="info-box">
             <h2>窗口信息</h2>
@@ -89,6 +90,7 @@
         async function fetchAndDisplayLocation() {
             const infoElement = document.getElementById('country-region-info');
             const onlineIpElement = document.getElementById('online-ip');
+            const warningElement = document.getElementById('ip-warning');
             const apiUrl = `https://ip125.com/api/${socks_proxy_ip}`;   //获取ip的归属地
             const onlineIpUrl = "https://api.ipify.org";    //在线获取ip
             try {
@@ -117,6 +119,14 @@
                 }
                 const onlineIp = await response.text();
                 onlineIpElement.textContent = onlineIp;
+
+                if (warningElement && onlineIp && socks_proxy_ip && onlineIp !== socks_proxy_ip) {
+                    warningElement.style.display = 'block'; // 或者 'inline', 'inline-block' 根据需要
+                    console.warn(`IP mismatch detected! Expected: ${socks_proxy_ip}, Got: ${onlineIp}. Displaying warning.`);
+                } else if (warningElement && (!onlineIp || onlineIp == '')) {
+                    warningElement.style.display = 'block'; // 或者 'inline', 'inline-block' 根据需要
+                    console.warn(`IP mismatch detected! Expected: ${socks_proxy_ip}, Got: ${onlineIp}. Displaying warning.`);
+                }
             } catch (error) {
                 console.error('Error fetching location info:', error);
                 infoElement.textContent = 'Error loading data';
