@@ -2084,7 +2084,7 @@ class ChromeManager:
                         try:
                             subprocess.Popen(["start", "", temp_shortcut], shell=True)
                             # 只等待极短时间，让进程开始启动
-                            time.sleep(0.1)  # 从0.05改为0.1秒
+                            time.sleep(0.5)  # 从0.1改为0.5秒
                         except Exception as e:
                             print(f"启动窗口 {num} 失败: {str(e)}")
                     else:
@@ -2092,13 +2092,13 @@ class ChromeManager:
                         print(f"警告: 临时快捷方式创建失败，直接启动原始快捷方式: {shortcut}")
                         try:
                             subprocess.Popen(["start", "", shortcut], shell=True)
-                            time.sleep(0.1)
+                            time.sleep(0.5)
                         except Exception as e:
                             print(f"启动窗口 {num} 失败: {str(e)}")
                 else:
                     # 不启用CDP，直接打开
                     subprocess.Popen(["start", "", shortcut], shell=True)
-                    time.sleep(0.05)  # 只等待50毫秒
+                    time.sleep(0.5)  # 只等待500毫秒
             
             # 在所有窗口启动后，在后台清理临时文件
             def cleanup_temp_files():
