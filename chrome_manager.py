@@ -5049,7 +5049,7 @@ class ChromeManager:
 
     # 返回chrome快捷方式启动时需要的运行参数
     def get_chrome_launch_arguments(self, chrome_num):
-        launch_arguments = "--no-default-browser-check"
+        launch_arguments = " --no-default-browser-check "
         chrome_home = f'http://127.0.0.1:31001/window/{chrome_num}'
         if chrome_num in self.fingerprint_proxy_notes:
             args = self.fingerprint_proxy_notes[chrome_num]
